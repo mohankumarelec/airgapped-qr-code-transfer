@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div class="flex flex-col items-start w-full items-center justify-center align-middle">
+            <div class="text-xl my-4">Data Receiver Mode</div>
+            <div class="text-sm mb-4">{{user_message}}</div>
+            <div class="text-sm mb-4">Progress: {{Object.keys(decoded_chunks).length}} / {{file_metadata.chunks || 0}}
+            </div>
+            <button v-if="!is_receiving" v-on:click="start_receiver" class="mb-6 p-1 border-2 border-gray-500">
+                Start Receiver
+            </button>
+            <button v-else v-on:click="stop_receiver" class="mb-6 p-1 border-2 border-gray-500">
+                Stop Receiver
+            </button>
+            <video id="videoElement" muted autoplay playsinline></video>
+        </div>
+    </div>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/@undecaf/zbar-wasm@latest/dist/index.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.3/pako.min.js"></script>
+    <script>
+        const { createApp, ref, reactive, onMounted, computed } = Vue
+
+        createApp({
+            setup() {
+                const user_message = ref("Click receive button to start receiving");
+                const decoded_chunks = ref({});
+                const total_chunks = ref(-1);
+                const file_metadata = reactive({})
+                const is_receiving = ref(false);
+                let canvas, context, videoElement;
+
+                const decode_data = (input_string) => {
+                    const encoded_data = atob(input_string.split(",")[1])
+                    const encoded_array = Array.from(encoded_data, (char) => char.charCodeAt(0));
+                    const utf8Decoder = new TextDecoder();
+                    const output_string = utf8Decoder.decode(new Uint8Array(encoded_array));
+                    const data_array = Array.from(output_string, (char) => char.charCodeAt(0));
+                    return { "index": parseInt(input_string.split(",")[0]), "data": data_array };
+                };
+
+                const download_file = (data, fileName) => {
+                    const blob = new Blob([data]);
+                    const dummy_element = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    dummy_element.href = url;
+                    dummy_element.download = fileName;
+                    dummy_element.click();
+                    URL.revokeObjectURL(url);
+                }
+
+                const stop_receiver = () => {
+                    is_receiving.value = false;
+                    decoded_chunks.value = {};
+                    Object.assign(file_metadata, {});
+                    user_message.value = "Click receive button to start receiving";
+                }
+
+                const start_receiver = async () => {
+                    decoded_chunks.value = {};
+                    is_receiving.value = true;
+                    while (file_metadata.chunks != Object.keys(decoded_chunks.value).length) {
+                        try {
+                            await new Promise(r => setTimeout(r, 10));
+                            context.drawImage(videoElement, 0, 0);
+                            image_data = context.getImageData(0, 0, canvas.width, canvas.height);
+                            let symbols = await zbarWasm.scanImageData(image_data);
+                            if (!symbols || !symbols.length) {
+                                continue
+                            }
+                            let decoded_data = symbols[0].decode();
+                            if (decoded_data.includes("chunks")) {
+                                Object.assign(file_metadata, JSON.parse(decoded_data));
+                                decoded_chunks.value = {};
+                                user_message.value = `Transferring file: ${file_metadata.name}`;
+                            }
+                            else if (decoded_data.split(",").length == 2) {
+                                let raw_data = decode_data(decoded_data);
+                                decoded_chunks.value[raw_data["index"]] = raw_data["data"];
+                            }
+                            window.decoded_chunks = decoded_chunks.value;
+                        } catch (error) {
+                            console.error("Error in Loop: ", error);
+                        }
+                        if (!is_receiving.value) { 
+                            Object.assign(file_metadata, {});
+                            decoded_chunks.value = {};
+                            user_message.value = "Click receive button to start receiving";
+                            return true 
+                        };
+                    }
+                    user_message.value = "Data Transfer Complete";
+                    output_array = []
+                    for (let i = 0; i < file_metadata.chunks; i++) {
+                        output_array = output_array.concat(decoded_chunks.value[i])
+                    }
+                    let output_unit8array = Uint8Array.from(output_array);
+                    window.output_unit8array = output_unit8array;
+                    let infalted_array = pako.inflate(window.output_unit8array);
+                    download_file(infalted_array, file_metadata.name);
+                    stop_receiver();
+                };
+
+                onMounted(async () => {
+                    console.log("Application Initialized ...")
+                    videoElement = document.getElementById('videoElement');
+                    videoElement.srcObject = await navigator.mediaDevices.getUserMedia(
+                        { video: { facingMode: 'environment' } }
+                    );;
+                    canvas = document.createElement('canvas');
+                    context = canvas.getContext('2d');
+                    await new Promise(r => setTimeout(r, 2000));
+                    canvas.height = videoElement.videoHeight;
+                    canvas.width = videoElement.videoWidth;
+                    context.drawImage(videoElement, 0, 0);
+                })
+
+                return { user_message, start_receiver, is_receiving, file_metadata, decoded_chunks, stop_receiver }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>
