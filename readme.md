@@ -1,6 +1,21 @@
-# Airgap QR Transfer
+# Airgapped QR Code Transfer
 
-Airgap QR Transfer is a simple web-based tool to transfer data between devices using QR codes. It allows for the transfer of files without the need for network connectivity, leveraging QR codes to encode and decode file data. This project uses Vue.js for the frontend and libraries like pako for compression, qrcode.js for QR code generation, and zbar-wasm for QR code scanning.
+Airgapped QR Code Transfer is a simple web-based tool to transfer data between devices using QR codes. It allows for the transfer of files without the need for network connectivity, leveraging QR codes to encode and decode file data. This project uses Vue.js for the frontend and libraries like pako for compression, qrcode.js for QR code generation, and zbar-wasm for QR code scanning.
+
+## Live Online Demo
+
+1. **Receiver Setup:**
+   - Open [scanner.html](https://airgapped-qr-code-transfer.mohanram.co.in/scanner) in the receiver's browser.
+   - Allow access to the camera for scanning.
+
+2. **Sender Setup:**
+   - Open [generator.html](https://airgapped-qr-code-transfer.mohanram.co.in/generator) in the sender's browser.
+   - Upload the file that needs to be transferred.
+
+3. **Transfer Process:**
+   - Click the "Start Receiver" button in the receiver's browser and point it to the sender's screen.
+   - In the sender's browser, click "Choose file" and then click "Start Transfer."
+   - Wait for all parts to be transferred. The file will be downloaded on the receiver's device.
 
 ## Features
 
@@ -20,7 +35,7 @@ Airgap QR Transfer is a simple web-based tool to transfer data between devices u
 1. Clone the repository:
 
 ```sh
-git clone https://github.com/yourusername/airgap-qr-transfer.git
+git clone https://github.com/mohankumarelec/airgap-qr-transfer.git
 cd airgap-qr-transfer
 ```
 
