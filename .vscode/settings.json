@@ -1,9 +1,0 @@
-{
-    "liveServer.settings.https": {
-        "enable": true, //set it true to enable the feature.
-        "cert": "C:\\Users\\prdha\\OneDrive\\Desktop\\airgap-transfer\\localhost-2023-07-03-142430.cer", //full path of the certificate
-        "key": "C:\\Users\\prdha\\OneDrive\\Desktop\\airgap-transfer\\localhost-2023-07-03-142430.pkey", //full path of the private key
-        "passphrase": "password"
-    },
-    "workbench.tree.indent": 28
-}
