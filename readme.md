@@ -1,4 +1,4 @@
-# Airgapped QR Code Transfer
+# Airgapped QR Code Transfer Web App
 
 Airgapped QR Code Transfer is a simple web-based tool to transfer data between devices using QR codes. It allows for the transfer of files without the need for network connectivity, leveraging QR codes to encode and decode file data. This project uses Vue.js for the frontend and libraries like pako for compression, qrcode.js for QR code generation, and zbar-wasm for QR code scanning.
 
